@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スタンプカード【テスト版】</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background: #fee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      color: #666;
+      margin-bottom: 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    .progress-label {
+      font-size: 0.8rem;
+      color: #900;
+      text-align: right;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar-bg {
+      background: #f0ebe5;
+      border-radius: 100px;
+      height: 8px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #e8956d, #d4644a);
+      border-radius: 100px;
+      transition: width 0.6s ease;
+    }
+
+    .stamp-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .stamp-cell {
+      border-radius: 12px;
+      background: #f5f0eb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 4px 8px;
+      font-size: 1.4rem;
+      border: 2px dashed #ddd3ca;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      gap: 4px;
+    }
+
+    .stamp-date {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.02em;
+      line-height: 1;
+      display: none;
+    }
+
+    .stamp-cell.filled .stamp-date {
+      display: block;
+    }
+
+    .stamp-cell.filled {
+      background: linear-gradient(135deg, #f0a882, #e06a45);
+      border: 2px solid #e06a45;
+      box-shadow: 0 2px 8px rgba(224, 106, 69, 0.35);
+    }
+
+    .stamp-cell.new-stamp {
+      animation: stampPop 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+
+    @keyframes stampPop {
+      0%   { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+      60%  { transform: scale(1.2) rotate(5deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-stamp {
+      background: linear-gradient(135deg, #e8956d, #d4644a);
+      color: white;
+      box-shadow: 0 4px 14px rgba(212, 100, 74, 0.4);
+    }
+
+    .btn-stamp:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(212, 100, 74, 0.45);
+    }
+
+    .btn-stamp:active {
+      transform: translateY(1px);
+    }
+
+    .btn-stamp:disabled {
+      background: #ccc;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-reset {
+      background: transparent;
+      color: #c0a898;
+      font-size: 0.8rem;
+      margin-top: 10px;
+      text-decoration: underline;
+      font-weight: normal;
+      letter-spacing: 0;
+    }
+
+    .message {
+      text-align: center;
+      font-size: 0.9rem;
+      margin-top: 14px;
+      min-height: 24px;
+      color: #d4644a;
+      font-weight: bold;
+    }
+
+    .complete-banner {
+      display: none;
+      background: linear-gradient(135deg, #f7e9a0, #f5c842);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.95rem;
+      color: #7a6200;
+      font-weight: bold;
+    }
+
+    .count-display {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #3a2e28;
+      margin-bottom: 4px;
+    }
+
+    .count-label {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #9e8e82;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>スタンプカード</h1>
+  <p class="subtitle">レッスンに来たらスタンプを押してね</p>
+
+  <div class="card">
+    <div class="count-display" id="countDisplay">0</div>
+    <div class="count-label">/ <span id="maxLabel">10</span> スタンプ</div>
+
+    <div class="progress-label"><span id="progressText">0%</span></div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+    </div>
+
+    <div class="stamp-grid" id="stampGrid"></div>
+
+    <button class="btn btn-stamp" id="stampBtn" onclick="addStamp()">
+      ✦ スタンプを押す
+    </button>
+
+    <div class="message" id="message"></div>
+
+    <div class="complete-banner" id="completeBanner">
+      おめでとう！ぜんぶ押せたね！<br>
+      この画面をスタッフの人に見せてね！
+    </div>
+
+    <button class="btn btn-reset" onclick="resetStamps()">リセット（スタッフ用）</button>
+  </div>
+
+  <script>
+    const MAX_STAMPS = 12;
+    const DATES_KEY = 'stamp_dates'; // 押した日付の配列を保存
+
+    // 今日の日付文字列を返す（例: "2026-03-14"）
+    function todayString() {
+      return new Date().toLocaleDateString('sv-SE');
+    }
+
+    // M/D 形式に整形（例: "2026-03-14" → "3/14"）
+    function formatDate(str) {
+      const d = new Date(str);
+      return `${d.getMonth() + 1}/${d.getDate()}`;
+    }
+
+    function getDates() {
+      try {
+        return JSON.parse(localStorage.getItem(DATES_KEY) || '[]');
+      } catch { return []; }
+    }
+
+    function saveDates(dates) {
+      localStorage.setItem(DATES_KEY, JSON.stringify(dates));
+    }
+
+    function hasStampedToday() {
+      return getDates().includes(todayString());
+    }
+
+    function renderStamps(dates, newStampIndex = -1) {
+      const count = dates.length;
+      const grid = document.getElementById('stampGrid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i < MAX_STAMPS; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'stamp-cell' + (i < count ? ' filled' : '');
+        if (i === newStampIndex) cell.classList.add('new-stamp');
+
+        const icon = document.createElement('span');
+        icon.textContent = i < count ? '★' : '';
+
+        const dateLabel = document.createElement('span');
+        dateLabel.className = 'stamp-date';
+        dateLabel.textContent = dates[i] ? formatDate(dates[i]) : '';
+
+        cell.appendChild(icon);
+        cell.appendChild(dateLabel);
+        grid.appendChild(cell);
+      }
+
+      document.getElementById('countDisplay').textContent = count;
+      document.getElementById('maxLabel').textContent = MAX_STAMPS;
+
+      const pct = Math.round((count / MAX_STAMPS) * 100);
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('progressText').textContent = pct + '%';
+
+      const banner = document.getElementById('completeBanner');
+      const btn = document.getElementById('stampBtn');
+
+      if (count >= MAX_STAMPS) {
+        banner.style.display = 'block';
+        btn.disabled = true;
+        btn.textContent = '✦ スタッフに見せてね';
+      } else if (hasStampedToday()) {
+        btn.disabled = true;
+        btn.textContent = '✦ 本日のスタンプを押しました';
+        banner.style.display = 'none';
+        showNextStampTime();
+      } else {
+        banner.style.display = 'none';
+        btn.disabled = false;
+        btn.textContent = '✦ スタンプを押す';
+        clearNextStampTime();
+      }
+    }
+
+    function addStamp() {
+      const dates = getDates();
+      if (dates.length >= MAX_STAMPS) return;
+
+      if (hasStampedToday()) {
+        showMessage('本日はすでにスタンプを押しています', 'error');
+        return;
+      }
+
+      dates.push(todayString());
+      saveDates(dates);
+
+      renderStamps(dates, dates.length - 1);
+
+      if (dates.length >= MAX_STAMPS) {
+        showMessage('ぜんぶ押せたね！');
+      } else {
+        showMessage(`スタンプ ${dates.length} 個目を押しました！`);
+      }
+    }
+
+    function showNextStampTime() {
+      const el = document.getElementById('message');
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      const diffMs = tomorrow - now;
+      const h = Math.floor(diffMs / 3600000);
+      const m = Math.floor((diffMs % 3600000) / 60000);
+      el.style.color = '#9e8e82';
+      el.textContent = `次のスタンプまで あと ${h}時間${m}分`;
+    }
+
+    function clearNextStampTime() {
+      document.getElementById('message').textContent = '';
+    }
+
+    function resetStamps() {
+      if (!confirm('スタンプをリセットしますか？（スタッフ操作）')) return;
+      localStorage.removeItem(DATES_KEY);
+      renderStamps([]);
+      showMessage('リセットしました');
+    }
+
+    function showMessage(text, type = 'info') {
+      const el = document.getElementById('message');
+      el.textContent = text;
+      el.style.color = type === 'error' ? '#e05555' : '#d4644a';
+      setTimeout(() => {
+        if (hasStampedToday() && getDates().length < MAX_STAMPS) showNextStampTime();
+        else el.textContent = '';
+      }, 3000);
+    }
+
+    // 初期描画
+    renderStamps(getDates());
+
+    // URLパラメータ ?stamp=1 が付いていたら自動でスタンプ
+    const params = new URLSearchParams(location.search);
+    if (params.get('stamp') === '1') {
+      setTimeout(addStamp, 500);
+    }
+
+    // 残り時間を1分ごとに更新
+    setInterval(() => {
+      if (hasStampedToday() && getDates().length < MAX_STAMPS) showNextStampTime();
+    }, 60000);
+  </script>
+</body>
+</html>
